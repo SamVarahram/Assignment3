@@ -87,6 +87,7 @@ int main(int argc, char* argv[]) {
     free(mass);
     free(velocity);
     free(brightness);
+    // Jag bytte till test
 
 }
 // Function to calculate the force on a body
