@@ -11,9 +11,11 @@ typedef struct {
 } Vector2D;
 
 // Function prototypes
-Vector2D get_force_on_body(const int nstars, const int G, const float e0, int i, double* pos_x, double* pos_y, double* mass);
-double get_rij(int i, int j, double* pos_x, double* pos_y);
-Vector2D get_position_vector(int i, int j, double* pos_x, double* pos_y);
+Vector2D get_force_on_body(const int nstars, const int G, const float e0, int i, Vector2D* position, double* mass);
+double get_rij(int i, int j, Vector2D* position);
+Vector2D get_position_vector(int i, int j, Vector2D* position);
+void update_velocity_and_position(int i, const int stepsize, Vector2D* velocity, Vector2D* position, Vector2D* F, double* mass);
+
 
 
 int main(int argc, char* argv[]) {
@@ -41,12 +43,10 @@ int main(int argc, char* argv[]) {
     particle 0 brightness
     particle 1 position x*/
 
-    // Create arrays to store the data
-    double* pos_x = (double*) malloc(nstars * sizeof(double));
-    double* pos_y = (double*) malloc(nstars * sizeof(double));
+    // Create arrays to store the data and Vector2D to store the forces
+    Vector2D* position = (Vector2D*) malloc(nstars * sizeof(Vector2D));
     double* mass = (double*) malloc(nstars * sizeof(double));
-    double* vel_x = (double*) malloc(nstars * sizeof(double));
-    double* vel_y = (double*) malloc(nstars * sizeof(double));
+    Vector2D* velocity = (Vector2D*) malloc(nstars * sizeof(Vector2D));
     bool* brightness = (double*) malloc(nstars * sizeof(double));
 
     // Read in the data
@@ -56,23 +56,23 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     for (int i = 0; i < nstars; i++) {
-        fscanf(file, "%lf", &pos_x[i]);
-        fscanf(file, "%lf", &pos_y[i]);
+        fscanf(file, "%lf", position[i].x);
+        fscanf(file, "%lf", position[i].y);
         fscanf(file, "%lf", &mass[i]);
-        fscanf(file, "%lf", &vel_x[i]);
-        fscanf(file, "%lf", &vel_y[i]);
+        fscanf(file, "%lf", velocity[i].x);
+        fscanf(file, "%lf", velocity[i].y);
         fscanf(file, "%d", &brightness[i]);
     }
 }
 // Function to calculate the force on a body
-Vector2D get_force_on_body(const int nstars, const int G, const float e0, int i, double* pos_x, double* pos_y, double* mass) {
+Vector2D get_force_on_body(const int nstars, const int G, const float e0, int i, Vector2D* position, double* mass) {
     Vector2D F;
     F.x = -G * mass[i];
     F.y = -G * mass[i]; 
     for (int j = 0; j < nstars; j++) {
         if (i != j) {
-            double rij = get_rij(i, j, pos_x, pos_y);
-            Vector2D vector = get_position_vector(i, j, pos_x, pos_y);
+            double rij = get_rij(i, j, position);
+            Vector2D vector = get_position_vector(i, j, position);
             double temp = mass[j] / pow(rij + e0, 3);
             F.x *= temp * vector.x;
             F.y *= temp * vector.y;
@@ -82,14 +82,28 @@ Vector2D get_force_on_body(const int nstars, const int G, const float e0, int i,
 }
 
 // Function to calculate the distance between two bodies
-double get_rij(int i, int j, double* pos_x, double* pos_y) {
-    return sqrt(pow(pos_x[i] - pos_x[j], 2) + pow(pos_y[i] - pos_y[j], 2));
+double get_rij(int i, int j, Vector2D* position) {
+    return sqrt(pow(position[i].x - position[j].x, 2) + pow(position[i].y - position[j].y, 2));
 }
 
 // Function to calculate the position vector between two bodies
-Vector2D get_position_vector(int i, int j, double* pos_x, double* pos_y) {
+Vector2D get_position_vector(int i, int j, Vector2D* position) {
     Vector2D rij;
-    rij.x = pos_x[i] - pos_x[j];
-    rij.y = pos_y[i] - pos_y[j];
+    rij.x = position[i].x - position[j].x;
+    rij.y = position[i].y - position[j].y;
     return rij;
+}
+
+// Function to calculate the acceleration of a body
+void update_velocity_and_position(int i, const int stepsize, Vector2D* velocity, Vector2D* position, Vector2D* F, double* mass) {
+    velocity[i+1].x += stepsize * F[i].x / mass[i];
+    velocity[i+1].y += stepsize * F[i].y / mass[i];
+    position[i+1].x += stepsize * velocity[i+1].x;
+    position[i+1].y += stepsize * velocity[i+1].y;
+}
+
+int main_update(int nstars, int G, float e0, int i, Vector2D* position, double* mass, Vector2D* velocity, int stepsize) {
+    Vector2D F = get_force_on_body(nstars, G, e0, i, position, mass);
+    update_velocity_and_position(i, stepsize, velocity, position, &F, mass);
+    return 0;
 }
