@@ -33,6 +33,24 @@ int main(int argc, char* argv[]) {
     const int G = 100/nstars;
     const double e0 = 0.001; // Softening factor 10^-3
 
+    // Create arrays to store the data and Vector2D to store the forces
+    Vector2D* position = (Vector2D*) malloc(nstars * sizeof(Vector2D));
+    double* mass = (double*) malloc(nstars * sizeof(double));
+    Vector2D* velocity = (Vector2D*) malloc(nstars * sizeof(Vector2D));
+    bool* brightness = (double*) malloc(nstars * sizeof(double));
+
+    if (position == NULL || mass == NULL || velocity == NULL || brightness == NULL) {
+        fprintf(stderr, "Error allocating memory\n");
+        return 1;
+    }
+
+    // Read in the data
+    FILE* file = fopen(input_file, "r");
+    if(file == NULL) {
+        fprintf(stderr, "Error opening file\n");
+        return 1;
+    }
+
     // Read in the input file
     // Input file has structure:
     /*particle 0 position x
@@ -42,27 +60,34 @@ int main(int argc, char* argv[]) {
     particle 0 velocity y
     particle 0 brightness
     particle 1 position x*/
+    // The input file is binary
+    for (int i = 0; i < nstars; i++) {
+        fread(&position[i], sizeof(Vector2D), 1, file);
+        fread(&mass[i], sizeof(double), 1, file);
+        fread(&velocity[i], sizeof(Vector2D), 1, file);
+        fread(&brightness[i], sizeof(bool), 1, file);
+    }
+    fclose(file);
 
-    // Create arrays to store the data and Vector2D to store the forces
-    Vector2D* position = (Vector2D*) malloc(nstars * sizeof(Vector2D));
-    double* mass = (double*) malloc(nstars * sizeof(double));
-    Vector2D* velocity = (Vector2D*) malloc(nstars * sizeof(Vector2D));
-    bool* brightness = (double*) malloc(nstars * sizeof(double));
-
-    // Read in the data
-    FILE* file = fopen(input_file, "r");
-    if(file == NULL) {
+    // Output the data in a binary file
+    FILE* output = fopen("output.bin", "wb");
+    if(output == NULL) {
         fprintf(stderr, "Error opening file\n");
         return 1;
     }
     for (int i = 0; i < nstars; i++) {
-        fscanf(file, "%lf", position[i].x);
-        fscanf(file, "%lf", position[i].y);
-        fscanf(file, "%lf", &mass[i]);
-        fscanf(file, "%lf", velocity[i].x);
-        fscanf(file, "%lf", velocity[i].y);
-        fscanf(file, "%d", &brightness[i]);
+        fwrite(&position[i], sizeof(Vector2D), 1, output);
+        fwrite(&mass[i], sizeof(double), 1, output);
+        fwrite(&velocity[i], sizeof(Vector2D), 1, output);
+        fwrite(&brightness[i], sizeof(bool), 1, output);
     }
+
+    // Free the memory
+    free(position);
+    free(mass);
+    free(velocity);
+    free(brightness);
+
 }
 // Function to calculate the force on a body
 Vector2D get_force_on_body(const int nstars, const int G, const float e0, int i, Vector2D* position, double* mass) {
