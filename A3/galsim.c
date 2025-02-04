@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <math.h>
+#include "../graphics/graphics.h"
 
 typedef struct {
     double x;
@@ -11,10 +12,10 @@ typedef struct {
 } Vector2D;
 
 // Function prototypes
-Vector2D get_force_on_body(const int nstars, const int G, const float e0, int i, Vector2D* position, double* mass);
+Vector2D get_force_on_body(const int nstars, const int G, const float e0, int i, Vector2D* position, const double* mass);
 double get_rij(int i, int j, Vector2D* position);
 Vector2D get_position_vector(int i, int j, Vector2D* position);
-void update_velocity_and_position(int i, const int stepsize, Vector2D* velocity, Vector2D* position, Vector2D* F, double* mass);
+void update_velocity_and_position(int i, const int stepsize, Vector2D* velocity, Vector2D* position, Vector2D* F, const double* mass);
 
 
 
@@ -35,9 +36,9 @@ int main(int argc, char* argv[]) {
 
     // Create arrays to store the data and Vector2D to store the forces
     Vector2D* position = (Vector2D*) malloc(nstars * sizeof(Vector2D));
-    double* mass = (double*) malloc(nstars * sizeof(double));
+    const double* mass = (double*) malloc(nstars * sizeof(double));
     Vector2D* velocity = (Vector2D*) malloc(nstars * sizeof(Vector2D));
-    bool* brightness = (double*) malloc(nstars * sizeof(double));
+    const bool* brightness = (double*) malloc(nstars * sizeof(double));
 
     if (position == NULL || mass == NULL || velocity == NULL || brightness == NULL) {
         fprintf(stderr, "Error allocating memory\n");
@@ -69,8 +70,33 @@ int main(int argc, char* argv[]) {
     }
     fclose(file);
 
+    if (graphics) {
+        InitializeGraphics(argv[0], 800, 800);
+        SetCAxes(0, 1);
+    }
+
+    for (int step = 0; step < nsteps; step++) {
+        for (int i = 0; i < nstars; i++) {
+            Vector2D F = get_force_on_body(nstars, G, e0, i, position, mass);
+            update_velocity_and_position(i, stepsize, velocity, position, &F, mass);
+        }
+        if (graphics) {
+            ClearScreen();
+            for (int i = 0; i < nstars; i++) {
+                DrawCircle(position[i].x, position[i].y, 1, 1, 0.01, 0.5);
+            }
+            Refresh();
+            usleep(30000); // Sleep for 30ms to control the animation speed
+        }
+    }
+
+    if (graphics) {
+        FlushDisplay();
+        CloseDisplay();
+    }
+
     // Output the data in a binary file
-    FILE* output = fopen("output.bin", "wb");
+    FILE* output = fopen("result.gal", "wb");
     if(output == NULL) {
         fprintf(stderr, "Error opening file\n");
         return 1;
@@ -91,7 +117,7 @@ int main(int argc, char* argv[]) {
 
 }
 // Function to calculate the force on a body
-Vector2D get_force_on_body(const int nstars, const int G, const float e0, int i, Vector2D* position, double* mass) {
+Vector2D get_force_on_body(const int nstars, const int G, const float e0, int i, Vector2D* position, const double* mass) {
     Vector2D F;
     F.x = -G * mass[i];
     F.y = -G * mass[i]; 
@@ -121,14 +147,14 @@ Vector2D get_position_vector(int i, int j, Vector2D* position) {
 }
 
 // Function to calculate the acceleration of a body
-void update_velocity_and_position(int i, const int stepsize, Vector2D* velocity, Vector2D* position, Vector2D* F, double* mass) {
+void update_velocity_and_position(int i, const int stepsize, Vector2D* velocity, Vector2D* position, Vector2D* F, const double* mass) {
     velocity[i+1].x += stepsize * F[i].x / mass[i];
     velocity[i+1].y += stepsize * F[i].y / mass[i];
     position[i+1].x += stepsize * velocity[i+1].x;
     position[i+1].y += stepsize * velocity[i+1].y;
 }
 
-int main_update(int nstars, int G, float e0, int i, Vector2D* position, double* mass, Vector2D* velocity, int stepsize) {
+int main_update(int nstars, int G, float e0, int i, Vector2D* position, const double* mass, Vector2D* velocity, int stepsize) {
     Vector2D F = get_force_on_body(nstars, G, e0, i, position, mass);
     update_velocity_and_position(i, stepsize, velocity, position, &F, mass);
     return 0;
