@@ -1,6 +1,6 @@
 CC = gcc
 LD = gcc
-CFLAGS = -O3 -Wall #-Werror
+CFLAGS = -O3 -g -Wall -Werror
 LDFLAGS = 
 RM = /bin/rm -f
 OBJS = galsim.o
