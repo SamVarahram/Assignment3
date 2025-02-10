@@ -15,4 +15,4 @@ galsim.o: galsim.c
 	$(CC) $(CFLAGS) -c galsim.c 
 
 clean:
-	$(RM) $(EXECUTABLE) $(OBJS)
+	$(RM) $(EXECUTABLE) $(OBJS) result.gal

@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
     }
 
     const int G = 100/nstars;
-    const double e0 = 0.001; // Softening factor 10^-3
+    const double e0 = 1e-3; // Softening factor 10^-3
 
     // Create arrays to store the data and Vector2D to store the forces
     Vector2D* position = (Vector2D*) malloc(nstars * sizeof(Vector2D));
@@ -127,9 +127,7 @@ int main(int argc, char* argv[]) {
 }
 // Function to calculate the force on a body
 Vector2D get_force_on_body(const int nstars, const int G, const float e0, int i, Vector2D* position, double* mass) {
-    Vector2D F = {0.0, 0.0};
-    F.x = -G * mass[i];
-    F.y = -G * mass[i]; 
+    Vector2D F = {0.0, 0.0}; 
     for (int j = 0; j < nstars; j++) {
         if (i != j) {
 
@@ -137,11 +135,14 @@ Vector2D get_force_on_body(const int nstars, const int G, const float e0, int i,
             double dy = position[i].y - position[j].y;
             double rij = sqrt(dx * dx + dy * dy);
             
+            
             double temp = mass[j] / ((rij + e0) * (rij + e0) * (rij + e0)); // pow(rij + e0, 3)
             F.x += temp * dx;
             F.y += temp * dy;
         }
     }
+    F.x *= -G * mass[i];
+    F.y *= -G * mass[i];
     return F;
 }
 
