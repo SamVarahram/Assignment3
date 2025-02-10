@@ -63,6 +63,7 @@ int main(int argc, char* argv[]) {
         free(brightness);
         return 1;
     }
+    
 
     // Read in the input file
     // Input file has structure:
@@ -87,6 +88,10 @@ int main(int argc, char* argv[]) {
         //    i, position[i].x, position[i].y, mass[i], velocity[i].x, velocity[i].y, brightness[i]);
     }
     fclose(file);
+
+
+
+
     Vector2D F = {0.0, 0.0};
     // Loop over the timesteps
     for (int time = 0; time < nsteps; time++) {
