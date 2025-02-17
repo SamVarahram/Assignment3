@@ -13,8 +13,7 @@ typedef struct {
 } Vector2D;
 
 // Function prototypes
-void get_force_on_body(const int nstars, const double G, const double e0, Vector2D* position, double* mass, double* Fx, double* Fy);
-void update_velocity_and_position(const double stepsize, const int nstars, Vector2D* velocity, Vector2D* position, double* mass, double* Fx, double* Fy);
+void get_force_on_body(const int nstars, const double G, const double e0, Vector2D* position, double* mass, double* Fx, double* Fy, Vector2D* velocity, const double stepsize);
 static double get_wall_seconds();
 
 int main(int argc, char* argv[]) {
@@ -99,8 +98,7 @@ int main(int argc, char* argv[]) {
 
     // Loop over the timesteps
     for (int time = 0; time < nsteps; time++) {
-        get_force_on_body(nstars, G, e0, position, mass, Fx, Fy);
-        update_velocity_and_position(stepsize, nstars, velocity, position, mass, Fx, Fy);
+        get_force_on_body(nstars, G, e0, position, mass, Fx, Fy, velocity, stepsize);
     }
   
     
@@ -137,7 +135,7 @@ int main(int argc, char* argv[]) {
 }
 
 // Function to calculate the force on a body
-void get_force_on_body(const int nstars, const double G, const double e0, Vector2D* position, double* mass, double* Fx, double* Fy) {
+void get_force_on_body(const int nstars, const double G, const double e0, Vector2D* position, double* mass, double* Fx, double* Fy, Vector2D* velocity, const double stepsize) {
     for (int i = 0; i < nstars; i++) {
         double sumx = 0;
         double sumy = 0;
@@ -156,12 +154,6 @@ void get_force_on_body(const int nstars, const double G, const double e0, Vector
         }
         Fx[i] = sumx * -G * mass[i];
         Fy[i] = sumy * -G * mass[i];
-    }
-}
-
-// Function to calculate the acceleration of a body
-void update_velocity_and_position(const double stepsize, const int nstars, Vector2D* velocity, Vector2D* position, double* mass, double* Fx, double* Fy) {
-    for (int i = 0; i < nstars; i++) {
         velocity[i].x += stepsize * Fx[i] / mass[i];
         velocity[i].y += stepsize * Fy[i] / mass[i];
         position[i].x += stepsize * velocity[i].x;
