@@ -89,9 +89,6 @@ int main(int argc, char* argv[]) {
     }
     fclose(file);
 
-
-
-
     double* Fx = (double*) malloc(nstars * sizeof(double));
     double* Fy = (double*) malloc(nstars * sizeof(double));
     memset(Fx, 0, nstars * sizeof(double));
