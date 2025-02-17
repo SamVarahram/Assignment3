@@ -12,11 +12,9 @@ typedef struct {
     double y;
 } Vector2D;
 
-
-
 // Function prototypes
-void get_force_on_body(const int nstars, const int G, const float e0, Vector2D* position, double* mass, double* Fx, double* Fy);
-void update_velocity_and_position(const int stepsize, const int nstars, Vector2D* velocity, Vector2D* position, double* mass, double* Fx, double* Fy);
+void get_force_on_body(const int nstars, const double G, const double e0, Vector2D* position, double* mass, double* Fx, double* Fy);
+void update_velocity_and_position(const double stepsize, const int nstars, Vector2D* velocity, Vector2D* position, double* mass, double* Fx, double* Fy);
 static double get_wall_seconds();
 
 int main(int argc, char* argv[]) {
@@ -139,7 +137,7 @@ int main(int argc, char* argv[]) {
 }
 
 // Function to calculate the force on a body
-void get_force_on_body(const int nstars, const int G, const float e0, Vector2D* position, double* mass, double* Fx, double* Fy) {
+void get_force_on_body(const int nstars, const double G, const double e0, Vector2D* position, double* mass, double* Fx, double* Fy) {
     for (int i = 0; i < nstars; i++) {
         double sumx = 0;
         double sumy = 0;
@@ -149,9 +147,9 @@ void get_force_on_body(const int nstars, const int G, const float e0, Vector2D* 
                 double dx = position[i].x - position[j].x;
                 double dy = position[i].y - position[j].y;
                 double rije0 = sqrt(dx * dx + dy * dy) + e0;
-                //double rije0 = rij + e0;
+                double pow_rije0 = 1.0 / (rije0 * rije0 * rije0);
                 
-                double temp = mass[j] * (1 / (rije0 * rije0 * rije0)); // pow(rij + e0, 3)
+                double temp = mass[j] * pow_rije0; // pow(rij + e0, 3)
                 sumx += temp * dx;
                 sumy += temp * dy;
             }
@@ -162,7 +160,7 @@ void get_force_on_body(const int nstars, const int G, const float e0, Vector2D* 
 }
 
 // Function to calculate the acceleration of a body
-void update_velocity_and_position(const int stepsize, const int nstars, Vector2D* velocity, Vector2D* position, double* mass, double* Fx, double* Fy) {
+void update_velocity_and_position(const double stepsize, const int nstars, Vector2D* velocity, Vector2D* position, double* mass, double* Fx, double* Fy) {
     for (int i = 0; i < nstars; i++) {
         velocity[i].x += stepsize * Fx[i] / mass[i];
         velocity[i].y += stepsize * Fy[i] / mass[i];
