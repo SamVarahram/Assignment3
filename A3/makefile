@@ -1,7 +1,7 @@
 CC = gcc
 LD = gcc
-CFLAGS = -O3 -g -Wall -Werror
-LDFLAGS = 
+CFLAGS = -O3 -g -Wall -Werror -march=native -funroll-loops -ftree-vectorize -ffast-math 
+LDFLAGS = -lm
 RM = /bin/rm -f
 OBJS = galsim.o
 EXECUTABLE = galsim
@@ -9,7 +9,7 @@ EXECUTABLE = galsim
 all:$(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJS)
-	$(LD) $(LDFLAGS) $(OBJS) -o $(EXECUTABLE) -lm
+	$(LD) $(OBJS) -o $(EXECUTABLE) $(LDFLAGS)
 
 galsim.o: galsim.c 
 	$(CC) $(CFLAGS) -c galsim.c 
