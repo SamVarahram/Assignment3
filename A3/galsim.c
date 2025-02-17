@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
 }
 
 // Function to calculate the force on a body
-void get_force_on_body(const int nstars, const double G, const double e0, double* pos_x, double* pos_y, double* mass, double* Fx, double* Fy) {
+inline void get_force_on_body(const int nstars, const double G, const double e0, double* pos_x, double* pos_y, double* mass, double* Fx, double* Fy) {
     for (int i = 0; i < nstars; i++) {
         double sumx = 0;
         double sumy = 0;
@@ -134,7 +134,7 @@ void get_force_on_body(const int nstars, const double G, const double e0, double
 }
 
 // Function to calculate the acceleration of a body
-void update_velocity_and_position(const double stepsize, const int nstars, double* vel_x, double* vel_y, double* pos_x, double* pos_y, double* mass, double* Fx, double* Fy) {
+inline void update_velocity_and_position(const double stepsize, const int nstars, double* vel_x, double* vel_y, double* pos_x, double* pos_y, double* mass, double* Fx, double* Fy) {
     for (int i = 0; i < nstars; i++) {
         vel_x[i] += stepsize * Fx[i] / mass[i];
         vel_y[i] += stepsize * Fy[i] / mass[i];
