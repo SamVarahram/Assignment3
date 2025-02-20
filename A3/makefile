@@ -1,6 +1,6 @@
 CC = gcc
 LD = gcc
-CFLAGS = -O3 -g -Wall -Werror -march=native -funroll-loops -ffast-math 
+CFLAGS = -O3 -g -Wall -Werror -march=native -funroll-loops -ffast-math -fopt-info-vec-optimized 
 LDFLAGS = -lm
 RM = /bin/rm -f
 OBJS = galsim.o

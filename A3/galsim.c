@@ -13,8 +13,8 @@ typedef struct {
 } Vector2D;
 
 // Function prototypes
-void get_force_on_body(const int nstars, const double G, const double e0, Vector2D* position, double* mass, double* Fx, double* Fy);
-void update_velocity_and_position(const double stepsize, const int nstars, Vector2D* velocity, Vector2D* position, double* mass, double* Fx, double* Fy);
+void get_force_on_body(const int nstars, const double G, const double e0, Vector2D* position, double* mass, double* ACCx, double* ACCy);
+void update_velocity_and_position(const double stepsize, const int nstars, Vector2D* velocity, Vector2D* position, double* mass, double* ACCx, double* ACCy);
 static double get_wall_seconds();
 
 int main(int argc, char* argv[]) {
@@ -89,15 +89,18 @@ int main(int argc, char* argv[]) {
     }
     fclose(file);
 
-    double* Fx = (double*) malloc(nstars * sizeof(double));
-    double* Fy = (double*) malloc(nstars * sizeof(double));
-    memset(Fx, 0, nstars * sizeof(double));
-    memset(Fy, 0, nstars * sizeof(double));
+
+
+
+    double* ACCx = (double*) malloc(nstars * sizeof(double));
+    double* ACCy = (double*) malloc(nstars * sizeof(double));
+    memset(ACCx, 0, nstars * sizeof(double));
+    memset(ACCy, 0, nstars * sizeof(double));
 
     // Loop over the timesteps
     for (int time = 0; time < nsteps; time++) {
-        get_force_on_body(nstars, G, e0, position, mass, Fx, Fy);
-        update_velocity_and_position(stepsize, nstars, velocity, position, mass, Fx, Fy);
+        get_force_on_body(nstars, G, e0, position, mass, ACCx, ACCy);
+        update_velocity_and_position(stepsize, nstars, velocity, position, mass, ACCx, ACCy);
     }
   
     
@@ -119,8 +122,8 @@ int main(int argc, char* argv[]) {
     fclose(output);
 
     // Free the memory
-    free(Fx);
-    free(Fy);
+    free(ACCx);
+    free(ACCy);
     free(position);
     free(mass);
     free(velocity);
@@ -134,33 +137,42 @@ int main(int argc, char* argv[]) {
 }
 
 // Function to calculate the force on a body
-void get_force_on_body(const int nstars, const double G, const double e0, Vector2D* position, double* mass, double* Fx, double* Fy) {
+void get_force_on_body(const int nstars, const double G, const double e0, Vector2D* position, double* mass, double* ACCx, double* ACCy) {
+    // Reset acceleration arrays to zero
     for (int i = 0; i < nstars; i++) {
-        double sumx = 0;
-        double sumy = 0;
-        for (int j = 0; j < nstars; j++) {
-            if (i != j) {
+        ACCx[i] = 0;
+        ACCy[i] = 0;
+    }
+    for (int i = 0; i < nstars; i++) {
+        double posx = position[i].x;
+        double posy = position[i].y;
+        double mass_i = mass[i];
+        for (int j = i+1; j < nstars; j++) {
 
-                double dx = position[i].x - position[j].x;
-                double dy = position[i].y - position[j].y;
-                double rije0 = sqrt(dx * dx + dy * dy) + e0;
-                double pow_rije0 = 1.0 / (rije0 * rije0 * rije0);
-                
-                double temp = mass[j] * pow_rije0; // pow(rij + e0, 3)
-                sumx += temp * dx;
-                sumy += temp * dy;
-            }
+            double dx = posx - position[j].x;
+            double dy = posy - position[j].y;
+            double rije0 = sqrt(dx * dx + dy * dy) + e0;
+            double pow_rije0 = 1.0 / (rije0 * rije0 * rije0);
+            
+            double factor_i = mass[j] * pow_rije0;
+            double factor_j = mass_i * pow_rije0;
+            
+            ACCx[i] -= factor_i * dx;
+            ACCy[i] -= factor_i * dy;
+            ACCx[j] += factor_j * dx;
+            ACCy[j] += factor_j * dy;
+            
         }
-        Fx[i] = sumx * -G * mass[i];
-        Fy[i] = sumy * -G * mass[i];
+        ACCx[i] *= G;
+        ACCy[i] *= G;
     }
 }
 
 // Function to calculate the acceleration of a body
-void update_velocity_and_position(const double stepsize, const int nstars, Vector2D* velocity, Vector2D* position, double* mass, double* Fx, double* Fy) {
+void update_velocity_and_position(const double stepsize, const int nstars, Vector2D* velocity, Vector2D* position, double* mass, double* ACCx, double* ACCy) {
     for (int i = 0; i < nstars; i++) {
-        velocity[i].x += stepsize * Fx[i] / mass[i];
-        velocity[i].y += stepsize * Fy[i] / mass[i];
+        velocity[i].x += stepsize * ACCx[i];
+        velocity[i].y += stepsize * ACCy[i];
         position[i].x += stepsize * velocity[i].x;
         position[i].y += stepsize * velocity[i].y;
     }
