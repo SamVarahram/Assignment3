@@ -147,6 +147,8 @@ void get_force_on_body(const int nstars, const double G, const double e0, Vector
         double posx = position[i].x;
         double posy = position[i].y;
         double mass_i = mass[i];
+        double accx = ACCx[i];
+        double accy = ACCy[i];
         for (int j = i+1; j < nstars; j++) {
 
             double dx = posx - position[j].x;
@@ -157,14 +159,14 @@ void get_force_on_body(const int nstars, const double G, const double e0, Vector
             double factor_i = mass[j] * pow_rije0;
             double factor_j = mass_i * pow_rije0;
             
-            ACCx[i] -= factor_i * dx;
-            ACCy[i] -= factor_i * dy;
+            accx -= factor_i * dx;
+            accy -= factor_i * dy;
             ACCx[j] += factor_j * dx;
             ACCy[j] += factor_j * dy;
             
         }
-        ACCx[i] *= G;
-        ACCy[i] *= G;
+        ACCx[i] = G * accx;
+        ACCy[i] = G * accy;
     }
 }
 
